@@ -1,11 +1,11 @@
 /**
- * AI Code Review Script
+ * AI Code Review Script (Gemini)
  *
- * GitHub Actions에서 실행되어 PR의 diff를 Claude API로 분석하고,
+ * GitHub Actions에서 실행되어 PR의 diff를 Gemini API로 분석하고,
  * 점수와 피드백을 PR 코멘트로 남깁니다.
  *
  * 환경 변수:
- *   CLAUDE_API_KEY  - Anthropic API 키
+ *   GEMINI_API_KEY  - Google AI (Gemini) API 키
  *   GITHUB_TOKEN    - GitHub 토큰 (Actions에서 자동 제공)
  *   PR_NUMBER       - PR 번호
  *   REPO_FULL_NAME  - owner/repo 형식
@@ -22,8 +22,8 @@ const fs = require("fs");
 /** diff 최대 길이 (토큰 절약) */
 const MAX_DIFF_LENGTH = 10000;
 
-/** Claude 모델 */
-const CLAUDE_MODEL = "claude-sonnet-4-20250514";
+/** Gemini 모델 */
+const GEMINI_MODEL = "gemini-2.5-flash-preview-05-20";
 
 /** 평가 기준 프롬프트 */
 const REVIEW_PROMPT = `당신은 10년차 시니어 개발자입니다.
@@ -58,7 +58,7 @@ const REVIEW_PROMPT = `당신은 10년차 시니어 개발자입니다.
 // ============================================
 
 const {
-  CLAUDE_API_KEY,
+  GEMINI_API_KEY,
   GITHUB_TOKEN,
   PR_NUMBER,
   REPO_FULL_NAME,
@@ -71,14 +71,14 @@ const {
 // ============================================
 
 async function main() {
-  console.log(`\n🔍 AI Code Review 시작`);
+  console.log(`\n🔍 AI Code Review 시작 (Gemini)`);
   console.log(`   PR #${PR_NUMBER}: ${PR_TITLE}`);
   console.log(`   Author: ${PR_AUTHOR}\n`);
 
   // 1. 환경 변수 검증
-  if (!CLAUDE_API_KEY) {
-    console.error("❌ CLAUDE_API_KEY가 설정되지 않았습니다.");
-    await postFallbackComment("CLAUDE_API_KEY가 설정되지 않았습니다.");
+  if (!GEMINI_API_KEY) {
+    console.error("❌ GEMINI_API_KEY가 설정되지 않았습니다.");
+    await postFallbackComment("GEMINI_API_KEY가 설정되지 않았습니다.");
     process.exit(1);
   }
 
@@ -90,14 +90,14 @@ async function main() {
   }
   console.log(`📄 Diff 크기: ${diff.length}자\n`);
 
-  // 3. Claude API로 리뷰 요청
+  // 3. Gemini API로 리뷰 요청
   let review;
   try {
     review = await requestReview(diff);
-    console.log("✅ Claude 리뷰 완료\n");
+    console.log("✅ Gemini 리뷰 완료\n");
   } catch (err) {
-    console.error("❌ Claude API 호출 실패:", err.message);
-    await postFallbackComment(`Claude API 호출 중 오류가 발생했습니다: ${err.message}`);
+    console.error("❌ Gemini API 호출 실패:", err.message);
+    await postFallbackComment(`Gemini API 호출 중 오류가 발생했습니다: ${err.message}`);
     process.exit(1);
   }
 
@@ -133,28 +133,32 @@ function readDiff() {
 }
 
 // ============================================
-// Claude API 호출
+// Gemini API 호출
 // ============================================
 
 async function requestReview(diff) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
   const body = {
-    model: CLAUDE_MODEL,
-    max_tokens: 1024,
-    messages: [
+    contents: [
       {
-        role: "user",
-        content: `${REVIEW_PROMPT}\n\n## PR 정보\n- 제목: ${PR_TITLE}\n- 작성자: ${PR_AUTHOR}\n\n## 코드 변경사항 (diff)\n\`\`\`diff\n${diff}\n\`\`\``,
+        parts: [
+          {
+            text: `${REVIEW_PROMPT}\n\n## PR 정보\n- 제목: ${PR_TITLE}\n- 작성자: ${PR_AUTHOR}\n\n## 코드 변경사항 (diff)\n\`\`\`diff\n${diff}\n\`\`\``,
+          },
+        ],
       },
     ],
+    generationConfig: {
+      temperature: 0.2,
+      maxOutputTokens: 1024,
+      responseMimeType: "application/json",
+    },
   };
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": CLAUDE_API_KEY,
-      "anthropic-version": "2023-06-01",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 
@@ -164,12 +168,14 @@ async function requestReview(diff) {
   }
 
   const data = await response.json();
-  const text = data.content[0].text;
+
+  // Gemini 응답에서 텍스트 추출
+  const text = data.candidates[0].content.parts[0].text;
 
   // JSON 파싱 (코드블록으로 감싸져 있을 수 있음)
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
-    throw new Error("Claude 응답에서 JSON을 찾을 수 없습니다.");
+    throw new Error("Gemini 응답에서 JSON을 찾을 수 없습니다.");
   }
 
   return JSON.parse(jsonMatch[0]);
@@ -230,7 +236,7 @@ function formatComment(review) {
   }
 
   comment += `---\n`;
-  comment += `*🤖 Reviewed by Claude AI | Model: ${CLAUDE_MODEL}*`;
+  comment += `*🤖 Reviewed by Gemini AI | Model: ${GEMINI_MODEL}*`;
 
   return comment;
 }
@@ -279,7 +285,7 @@ async function postFallbackComment(errorMsg) {
     `⚠️ 자동 코드 리뷰 중 오류가 발생했습니다.\n\n` +
     `\`\`\`\n${errorMsg}\n\`\`\`\n\n` +
     `수동으로 리뷰를 진행해주세요.\n\n` +
-    `---\n*🤖 Claude AI Review Bot*`;
+    `---\n*🤖 Gemini AI Review Bot*`;
 
   try {
     await postComment(body);
