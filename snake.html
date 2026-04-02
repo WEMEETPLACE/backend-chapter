@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Snake Game</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a2e; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
+  .game-container { text-align: center; }
+  canvas { border: 2px solid #4ade80; border-radius: 8px; display: block; margin: 16px auto; }
+  .score { color: #4ade80; font-size: 1.5rem; font-weight: bold; }
+  .info { color: #888; font-size: 0.9rem; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="game-container">
+  <div class="score">Score: <span id="score">0</span></div>
+  <canvas id="game" width="400" height="400"></canvas>
+  <div class="info" id="info">방향키로 조작 | Space로 시작</div>
+</div>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const infoEl = document.getElementById('info');
+
+const GRID = 20;
+const COLS = canvas.width / GRID;
+const ROWS = canvas.height / GRID;
+
+let snake, food, direction, score, gameOver, gameStarted, intervalId;
+
+function init() {
+  snake = [{ x: 10, y: 10 }];
+  direction = { x: 1, y: 0 };
+  score = 0;
+  gameOver = false;
+  gameStarted = false;
+  scoreEl.textContent = score;
+  infoEl.textContent = '방향키로 조작 | Space로 시작';
+  spawnFood();
+  draw();
+}
+
+function spawnFood() {
+  do {
+    food = {
+      x: Math.floor(Math.random() * COLS),
+      y: Math.floor(Math.random() * ROWS)
+    };
+  } while (snake.some(s => s.x === food.x && s.y === food.y));
+}
+
+function update() {
+  if (gameOver) return;
+
+  const head = {
+    x: snake[0].x + direction.x,
+    y: snake[0].y + direction.y
+  };
+
+  // 벽 충돌
+  if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) {
+    endGame();
+    return;
+  }
+
+  // 자기 몸 충돌
+  if (snake.some(s => s.x === head.x && s.y === head.y)) {
+    endGame();
+    return;
+  }
+
+  snake.unshift(head);
+
+  // 먹이 섭취
+  if (head.x === food.x && head.y === food.y) {
+    score++;
+    scoreEl.textContent = score;
+    spawnFood();
+  } else {
+    snake.pop();
+  }
+
+  draw();
+}
+
+function draw() {
+  // 배경
+  ctx.fillStyle = '#16213e';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // 먹이
+  ctx.fillStyle = '#f43f5e';
+  ctx.beginPath();
+  ctx.arc(food.x * GRID + GRID / 2, food.y * GRID + GRID / 2, GRID / 2 - 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 뱀
+  snake.forEach((seg, i) => {
+    ctx.fillStyle = i === 0 ? '#4ade80' : '#22c55e';
+    ctx.fillRect(seg.x * GRID + 1, seg.y * GRID + 1, GRID - 2, GRID - 2);
+  });
+}
+
+function endGame() {
+  gameOver = true;
+  clearInterval(intervalId);
+  infoEl.textContent = `Game Over! (${score}점) | Space로 재시작`;
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 32px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+}
+
+function startGame() {
+  if (gameStarted && !gameOver) return;
+  init();
+  gameStarted = true;
+  infoEl.textContent = '방향키로 조작';
+  intervalId = setInterval(update, 120);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    startGame();
+    return;
+  }
+  const keyMap = {
+    ArrowUp: { x: 0, y: -1 },
+    ArrowDown: { x: 0, y: 1 },
+    ArrowLeft: { x: -1, y: 0 },
+    ArrowRight: { x: 1, y: 0 },
+  };
+  const newDir = keyMap[e.key];
+  if (newDir && (newDir.x !== -direction.x || newDir.y !== -direction.y)) {
+    direction = newDir;
+  }
+});
+
+init();
+</script>
+</body>
+</html>
