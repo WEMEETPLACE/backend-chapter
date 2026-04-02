@@ -48,10 +48,12 @@ const REVIEW_PROMPT = `당신은 10년차 시니어 개발자입니다.
     "readability": { "score": 점수, "max": 20 },
     "extra": { "score": 점수, "max": 10 }
   },
-  "feedback": "전체 피드백 (2-3문장)",
+  "feedback": "전체 피드백 (1-2문장, 간결하게)",
   "strengths": ["강점1", "강점2"],
   "improvements": ["개선점1", "개선점2"]
-}`;
+}
+
+중요: 반드시 위 JSON만 출력하세요. 설명, 마크다운, 코드블록 없이 순수 JSON만 반환하세요. 각 문자열은 짧게 작성하세요.`;
 
 // ============================================
 // 환경 변수 읽기
@@ -151,7 +153,7 @@ async function requestReview(diff) {
     ],
     generationConfig: {
       temperature: 0.2,
-      maxOutputTokens: 2048,
+      maxOutputTokens: 8192,
     },
   };
 
