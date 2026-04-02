@@ -1,0 +1,47 @@
+name: AI Code Review
+
+# PR이 열리거나 새 커밋이 push될 때 실행
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+# PR 코멘트 작성을 위한 권한
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  ai-review:
+    runs-on: ubuntu-latest
+    # draft PR은 건너뛰기
+    if: github.event.pull_request.draft == false
+
+    steps:
+      # 1. 코드 체크아웃 (전체 히스토리 포함 - diff 비교용)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2. Node.js 환경 설정
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. main 브랜치 기준 diff 생성
+      - name: Generate diff
+        run: |
+          git diff origin/main...HEAD -- '*.js' '*.ts' '*.jsx' '*.tsx' '*.py' '*.html' '*.css' > pr_diff.txt
+          echo "Diff size: $(wc -c < pr_diff.txt) bytes"
+
+      # 4. AI 코드 리뷰 실행
+      - name: Run AI review
+        env:
+          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO_FULL_NAME: ${{ github.repository }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: node review.js
