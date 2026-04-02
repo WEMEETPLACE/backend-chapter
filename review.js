@@ -151,8 +151,7 @@ async function requestReview(diff) {
     ],
     generationConfig: {
       temperature: 0.2,
-      maxOutputTokens: 1024,
-      responseMimeType: "application/json",
+      maxOutputTokens: 2048,
     },
   };
 
@@ -169,13 +168,26 @@ async function requestReview(diff) {
 
   const data = await response.json();
 
-  // Gemini 응답에서 텍스트 추출
-  const text = data.candidates[0].content.parts[0].text;
+  // 응답 구조 확인
+  if (!data.candidates || !data.candidates[0]) {
+    console.error("Gemini 응답 전체:", JSON.stringify(data, null, 2));
+    throw new Error("Gemini 응답에 candidates가 없습니다.");
+  }
 
-  // JSON 파싱 (코드블록으로 감싸져 있을 수 있음)
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  // parts에서 text 타입만 추출 (thinking 파트 제외)
+  const parts = data.candidates[0].content.parts;
+  const textParts = parts.filter(p => p.text !== undefined && !p.thought);
+  const text = textParts.map(p => p.text).join("");
+
+  console.log("📝 Gemini 응답 (처음 500자):", text.slice(0, 500));
+
+  // JSON 파싱 — ```json ... ``` 블록 또는 raw JSON
+  const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const jsonStr = codeBlockMatch ? codeBlockMatch[1] : text;
+
+  const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
-    throw new Error("Gemini 응답에서 JSON을 찾을 수 없습니다.");
+    throw new Error("Gemini 응답에서 JSON을 찾을 수 없습니다. 응답: " + text.slice(0, 300));
   }
 
   return JSON.parse(jsonMatch[0]);
