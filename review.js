@@ -23,7 +23,7 @@ const fs = require("fs");
 const MAX_DIFF_LENGTH = 10000;
 
 /** Gemini 모델 */
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_MODEL = "gemini-2.5-flash";
 
 /** 평가 기준 프롬프트 */
 const REVIEW_PROMPT = `당신은 10년차 시니어 개발자입니다.
