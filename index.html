@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Master</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>SNAKE GAME</h1>
+            <div class="score-board">
+                <div class="score-box">SCORE <span id="currentScore">0</span></div>
+                <div class="score-box">BEST <span id="bestScore">0</span></div>
+            </div>
+            <div class="skin-selector">
+                <button class="skin-btn active" data-skin="default" style="background: #e94560;"></button>
+                <button class="skin-btn" data-skin="emerald" style="background: #4ecca3;"></button>
+                <button class="skin-btn" data-skin="gold" style="background: #f0a500;"></button>
+                <button class="skin-btn" data-skin="neon" style="background: #00fff5;"></button>
+            </div>
+        </div>
+        
+        <div class="canvas-wrapper">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            <div id="overlay" class="overlay">
+                <h2 id="overlayText">SNAKE MASTER</h2>
+                <button id="restartBtn">RESTART</button>
+            </div>
+        </div>
+
+        <div class="mobile-controls">
+            <button class="ctrl-btn" id="ctrlUp">▲</button>
+            <div class="ctrl-row">
+                <button class="ctrl-btn" id="ctrlLeft">◀</button>
+                <button class="ctrl-btn" id="ctrlRight">▶</button>
+            </div>
+            <button class="ctrl-btn" id="ctrlDown">▼</button>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>

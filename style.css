@@ -1,0 +1,119 @@
+:root {
+    --bg-color: #1a1a2e;
+    --canvas-bg: #16213e;
+    --snake-head: #e94560;
+    --snake-body: #0f3460;
+    --food-color: #4ecca3;
+    --text-color: #ffffff;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.header {
+    text-align: center;
+}
+
+h1 {
+    margin: 0;
+    letter-spacing: 5px;
+    font-size: 2.5rem;
+    color: var(--snake-head);
+}
+
+.score-board {
+    display: flex;
+    gap: 30px;
+    margin-top: 10px;
+}
+
+.score-box {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.skin-selector {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    justify-content: center;
+}
+
+.skin-btn {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.skin-btn.active {
+    border-color: white;
+    transform: scale(1.2);
+}
+
+.canvas-wrapper {
+    position: relative;
+    border: 4px solid var(--snake-body);
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+canvas {
+    background-color: var(--canvas-bg);
+    display: block;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(22, 33, 62, 0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s;
+}
+
+.hidden {
+    display: none;
+    opacity: 0;
+}
+
+button {
+    background-color: var(--snake-head);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.1s, background-color 0.2s;
+}
+
+button:hover {
+    background-color: #ff5e78;
+    transform: scale(1.05);
+}
