@@ -352,20 +352,75 @@ function bfsV(sx,sy,tx,ty,obs){
   return{path:null,cells:[],exp,ok:false};
 }
 function floodN(sx,sy,obs){const vis=new Set(),q=[{x:sx,y:sy}];vis.add(`${sx},${sy}`);while(q.length){const c=q.shift();for(const d of DIRS){const nx=c.x+d.x,ny=c.y+d.y,k=`${nx},${ny}`;if(nx<0||nx>=cols||ny<0||ny>=rows||vis.has(k)||obs.has(k))continue;vis.add(k);q.push({x:nx,y:ny})}}return vis.size}
+
+// Simulate snake after following a path (returns new snake array)
+function simPath(pd,eat){
+  const s=snake.map(p=>({...p}));
+  for(let i=0;i<pd.length;i++){
+    s.unshift({x:s[0].x+pd[i].x,y:s[0].y+pd[i].y});
+    if(!(i===pd.length-1&&eat))s.pop();
+  }
+  return s;
+}
+
+// Check if a snake state can reach its own tail
+function canReachTail(sim){
+  const obs=new Set();
+  for(let i=1;i<sim.length-1;i++)obs.add(`${sim[i].x},${sim[i].y}`);
+  const h=sim[0],t=sim[sim.length-1];
+  return bfsV(h.x,h.y,t.x,t.y,obs).ok;
+}
+
 function getAutoDir(){
   const hd=snake[0],tl=snake[snake.length-1];
-  const obs=new Set();for(let i=1;i<snake.length-1;i++)obs.add(`${snake[i].x},${snake[i].y}`);
+
+  // Obstacles: body minus head (start) and tail (will move)
+  const obs=new Set();
+  for(let i=1;i<snake.length-1;i++)obs.add(`${snake[i].x},${snake[i].y}`);
+
+  // 1) BFS to food
   const fr=bfsV(hd.x,hd.y,food.x,food.y,obs);
   if(fr.ok){
-    const sObs=new Set();for(let i=0;i<snake.length;i++)sObs.add(`${snake[i].x},${snake[i].y}`);
-    sObs.delete(`${food.x},${food.y}`);sObs.delete(`${tl.x},${tl.y}`);
-    if(bfsV(food.x,food.y,tl.x,tl.y,sObs).ok){aiExp=fr.exp;aiPath=fr.cells;aiTgt='food';return fr.path[0]}
+    // SIMULATE the snake following the full path + eating
+    const sim=simPath(fr.path,true);
+    // Check: can the SIMULATED snake reach its own tail?
+    if(canReachTail(sim)){
+      aiExp=fr.exp;aiPath=fr.cells;aiTgt='food';return fr.path[0];
+    }
   }
+
+  // 2) Chase tail — but pick the step that keeps the most space
   const tr=bfsV(hd.x,hd.y,tl.x,tl.y,obs);
-  if(tr.ok&&tr.path.length>0){aiExp=tr.exp;aiPath=tr.cells;aiTgt='tail';return tr.path[0]}
-  aiExp=fr.exp.length?fr.exp:tr.exp;aiPath=[];aiTgt='survive';
+  if(tr.ok&&tr.path.length>0){
+    // Verify: after taking this step, simulate and check space
+    const stepDir=tr.path[0];
+    const nx=hd.x+stepDir.x,ny=hd.y+stepDir.y;
+    const spaceIfFollow=floodN(nx,ny,obs);
+
+    // Also check all other safe directions for more space
+    let bestDir=stepDir,bestSpace=spaceIfFollow;
+    for(const d of DIRS){
+      if(d.x===-dir.x&&d.y===-dir.y)continue;
+      if(d===stepDir)continue;
+      const cx=hd.x+d.x,cy=hd.y+d.y;
+      if(cx<0||cx>=cols||cy<0||cy>=rows||obs.has(`${cx},${cy}`))continue;
+      const sp=floodN(cx,cy,obs);
+      if(sp>bestSpace){bestSpace=sp;bestDir=d;}
+    }
+
+    aiExp=tr.exp;aiPath=tr.cells;aiTgt='tail';
+    return bestDir;
+  }
+
+  // 3) No path to food or tail — pure survival, pick most open space
+  aiExp=fr.exp.length?fr.exp:[];aiPath=[];aiTgt='survive';
   let bd=null,bc=-1;
-  for(const d of DIRS){if(d.x===-dir.x&&d.y===-dir.y)continue;const nx=hd.x+d.x,ny=hd.y+d.y;if(nx<0||nx>=cols||ny<0||ny>=rows||obs.has(`${nx},${ny}`))continue;const c=floodN(nx,ny,obs);if(c>bc){bc=c;bd=d}}
+  for(const d of DIRS){
+    if(d.x===-dir.x&&d.y===-dir.y)continue;
+    const nx=hd.x+d.x,ny=hd.y+d.y;
+    if(nx<0||nx>=cols||ny<0||ny>=rows||obs.has(`${nx},${ny}`))continue;
+    const c=floodN(nx,ny,obs);if(c>bc){bc=c;bd=d;}
+  }
   return bd||dir;
 }
 
