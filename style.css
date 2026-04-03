@@ -1,0 +1,84 @@
+:root {
+  --bg: #0a0f14;
+  --panel: #151f29;
+  --wall: #9eadb7;
+  --snake-head: #cbd44d;
+  --snake-body: #7fc9a1;
+  --apple: #f54b4b;
+  --text: #eaf4ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: radial-gradient(circle at top, #2b3e51 0%, #0a1926 70%);
+  color: var(--text);
+}
+
+.container {
+  width: min(95vw, 760px);
+  margin: 2rem auto;
+  padding: 1.2rem;
+  background: var(--panel);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+
+h1 {
+  margin: 0 0 1rem;
+  text-align: center;
+  font-size: 1.8rem;
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+canvas {
+  width: 100%;
+  display: block;
+  border: 2px solid var(--wall);
+  background-color: #09121a;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin: 1rem 0;
+  align-items: center;
+}
+
+.controls label {
+  flex: 1 1 auto;
+  font-size: 0.95rem;
+}
+
+.controls select,
+.controls button {
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #4e5f72;
+  background: #1e2d3a;
+  color: #e9f4ff;
+}
+
+.controls button:hover {
+  cursor: pointer;
+  background: #2f5067;
+}
+
+.instructions {
+  margin: 0.8rem 0 0;
+  font-size: 0.95rem;
+  color: #bbd3e1;
+}
