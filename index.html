@@ -373,47 +373,37 @@ function canReachTail(sim){
 
 function getAutoDir(){
   const hd=snake[0],tl=snake[snake.length-1];
-
-  // Obstacles: body minus head (start) and tail (will move)
   const obs=new Set();
   for(let i=1;i<snake.length-1;i++)obs.add(`${snake[i].x},${snake[i].y}`);
 
-  // 1) BFS to food
   const fr=bfsV(hd.x,hd.y,food.x,food.y,obs);
+
   if(fr.ok){
-    // SIMULATE the snake following the full path + eating
+    const step=fr.path[0];
+
+    // Check A: full path simulation (strictest, guaranteed safe)
     const sim=simPath(fr.path,true);
-    // Check: can the SIMULATED snake reach its own tail?
     if(canReachTail(sim)){
-      aiExp=fr.exp;aiPath=fr.cells;aiTgt='food';return fr.path[0];
+      aiExp=fr.exp;aiPath=fr.cells;aiTgt='food';return step;
+    }
+
+    // Check B: simulation too strict? if there's plenty of space, go anyway
+    // (AI recalculates every tick so it can adapt)
+    const nx=hd.x+step.x,ny=hd.y+step.y;
+    const space=floodN(nx,ny,obs);
+    if(space>snake.length){
+      aiExp=fr.exp;aiPath=fr.cells;aiTgt='food';return step;
     }
   }
 
-  // 2) Chase tail — but pick the step that keeps the most space
+  // 2) Chase tail (follow BFS shortest path)
   const tr=bfsV(hd.x,hd.y,tl.x,tl.y,obs);
   if(tr.ok&&tr.path.length>0){
-    // Verify: after taking this step, simulate and check space
-    const stepDir=tr.path[0];
-    const nx=hd.x+stepDir.x,ny=hd.y+stepDir.y;
-    const spaceIfFollow=floodN(nx,ny,obs);
-
-    // Also check all other safe directions for more space
-    let bestDir=stepDir,bestSpace=spaceIfFollow;
-    for(const d of DIRS){
-      if(d.x===-dir.x&&d.y===-dir.y)continue;
-      if(d===stepDir)continue;
-      const cx=hd.x+d.x,cy=hd.y+d.y;
-      if(cx<0||cx>=cols||cy<0||cy>=rows||obs.has(`${cx},${cy}`))continue;
-      const sp=floodN(cx,cy,obs);
-      if(sp>bestSpace){bestSpace=sp;bestDir=d;}
-    }
-
-    aiExp=tr.exp;aiPath=tr.cells;aiTgt='tail';
-    return bestDir;
+    aiExp=tr.exp;aiPath=tr.cells;aiTgt='tail';return tr.path[0];
   }
 
-  // 3) No path to food or tail — pure survival, pick most open space
-  aiExp=fr.exp.length?fr.exp:[];aiPath=[];aiTgt='survive';
+  // 3) Survive: most open space
+  aiExp=fr.ok?fr.exp:[];aiPath=[];aiTgt='survive';
   let bd=null,bc=-1;
   for(const d of DIRS){
     if(d.x===-dir.x&&d.y===-dir.y)continue;
