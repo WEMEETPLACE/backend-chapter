@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Snake Game</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>Snake Game</h1>
+    <section class="status-row">
+      <div>Score: <span id="score">0</span></div>
+      <div>High Score: <span id="highScore">0</span></div>
+      <div>Status: <span id="state">READY</span></div>
+    </section>
+
+    <canvas id="gameCanvas" width="640" height="640" aria-label="Snake game canvas"></canvas>
+
+    <div class="controls">
+      <label>Board size:
+        <select id="boardSize">
+          <option value="12">12</option>
+          <option value="16" selected>16</option>
+          <option value="20">20</option>
+          <option value="24">24</option>
+        </select>
+      </label>
+      <label>Snake skin:
+        <select id="skinSelect">
+          <option value="classic" selected>Classic</option>
+          <option value="neon">Neon</option>
+          <option value="forest">Forest</option>
+          <option value="sunset">Sunset</option>
+          <option value="ice">Ice</option>
+        </select>
+      </label>
+      <label>Speed:
+        <select id="speed">
+          <option value="120">Slow</option>
+          <option value="90" selected>Normal</option>
+          <option value="60">Fast</option>
+          <option value="40">Turbo</option>
+        </select>
+      </label>
+      <button id="startBtn">Start</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+
+    <p class="instructions">
+      방향키 ↑ ↓ ← → 를 사용해 뱀을 이동하세요. 벽 혹은 자기 몸에 닿으면 게임 종료됩니다.
+      사과를 먹을 때마다 길이가 늘고 점수가 올라갑니다. 모든 빈 칸을 채우면 승리입니다.
+    </p>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
