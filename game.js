@@ -176,9 +176,30 @@ skinBtns.forEach(btn => {
     });
 });
 
+// Mobile control event listeners
+const setupMobileControls = () => {
+    const controls = {
+        'ctrlUp': 'ArrowUp',
+        'ctrlDown': 'ArrowDown',
+        'ctrlLeft': 'ArrowLeft',
+        'ctrlRight': 'ArrowRight'
+    };
+
+    Object.entries(controls).forEach(([id, key]) => {
+        const btn = document.getElementById(id);
+        const triggerInput = (e) => {
+            e.preventDefault();
+            handleInput({ key });
+        };
+        btn.addEventListener('touchstart', triggerInput, { passive: false });
+        btn.addEventListener('mousedown', triggerInput);
+    });
+};
+
 // Event Listeners
 window.addEventListener('keydown', handleInput);
 restartBtn.addEventListener('click', init);
+setupMobileControls();
 
 // Initial Screen Setup
 ctx.fillStyle = '#16213e';
